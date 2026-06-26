@@ -1,79 +1,381 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>プロ野球ミニ - 1イニング対戦（修正版）</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        :root { --y-r: #EF3E42; --grass: #228B22; --soil: #8B4513; }
-        body { text-align: center; font-family: sans-serif; background: #1a1a1a; color: white; margin: 0; padding: 0; overflow: hidden; }
-        
-        #sb { background: #003300; width: 340px; margin: 10px auto 0; padding: 10px 5px; font-size: 14px; border: 2px solid #555; border-radius: 10px; }
-        .flex { display: flex; justify-content: space-around; align-items: center; }
-        .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 1px solid #777; margin: 0 2px; }
-        .b-on { background: #ffff00; } .s-on { background: #ffaa00; } .o-on { background: #ff0000; }
-        .runner { width: 12px; height: 12px; border: 1px solid #fff; transform: rotate(45deg); margin: 2px; }
-        .r-on { background: #ffff00; }
-
-        #stadium {
-            position: relative; width: 320px; height: 380px; background: var(--grass);
-            margin: 10px auto; border: 4px solid #ccc; border-radius: 20px; overflow: hidden; z-index: 1; cursor: pointer;
-        }
-        #infield { position: absolute; bottom: -60px; left: 35px; width: 250px; height: 250px; background: var(--soil); border-radius: 50%; transform: rotate(45deg); border: 2px solid #fff; pointer-events: none; }
-        #ball { position: absolute; width: 11px; height: 11px; background: white; border-radius: 50%; display: none; z-index: 5; }
-        #bat { 
-            position: absolute; bottom: 40px; left: 80px; width: 120px; height: 120px;
-            background-image: url('images/bat.png'); background-size: contain; background-repeat: no-repeat;
-            display: none; transform-origin: 20% 80%; z-index: 10; pointer-events: none;
-        }
-        
-        #msg { position: absolute; top: 25%; width: 100%; text-align: center; font-size: 24px; font-weight: bold; color: #ffff00; text-shadow: 2px 2px #000; z-index: 20; pointer-events: none; }
-        .btn-container { margin: 10px; height: 50px; }
-        #action-btn { padding: 12px 30px; font-size: 18px; font-weight: bold; cursor: pointer; background: var(--y-r); color: #fff; border: 2px solid #fff; border-radius: 50px; }
-    </style>
+<meta charset="UTF-8">
+<title>プロ野球ミニ - 1イニング対戦</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+:root { --y-r:#EF3E42; --grass:#228B22; --soil:#8B4513; }
+*{box-sizing:border-box}
+body{
+  text-align:center;
+  font-family:sans-serif;
+  background:#1a1a1a;
+  color:white;
+  margin:0;
+  padding:0;
+  overflow:hidden;
+}
+#sb{
+  background:#003300;
+  width:340px;
+  max-width:94vw;
+  margin:10px auto 0;
+  padding:10px 5px;
+  font-size:14px;
+  border:2px solid #555;
+  border-radius:10px;
+}
+.flex{display:flex;justify-content:space-around;align-items:center}
+.dot{
+  display:inline-block;
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  border:1px solid #777;
+  margin:0 2px;
+}
+.b-on{background:#ffff00}
+.s-on{background:#ffaa00}
+.o-on{background:#ff0000}
+.runner{
+  width:12px;
+  height:12px;
+  border:1px solid #fff;
+  transform:rotate(45deg);
+  margin:2px;
+}
+.r-on{background:#ffff00}
+#stadium{
+  position:relative;
+  width:320px;
+  height:380px;
+  background:var(--grass);
+  margin:10px auto;
+  border:4px solid #ccc;
+  border-radius:20px;
+  overflow:hidden;
+  z-index:1;
+  cursor:pointer;
+  user-select:none;
+  touch-action:manipulation;
+}
+#infield{
+  position:absolute;
+  bottom:-60px;
+  left:35px;
+  width:250px;
+  height:250px;
+  background:var(--soil);
+  border-radius:50%;
+  transform:rotate(45deg);
+  border:2px solid #fff;
+  pointer-events:none;
+}
+#ball{
+  position:absolute;
+  width:11px;
+  height:11px;
+  background:white;
+  border-radius:50%;
+  display:none;
+  z-index:5;
+  box-shadow:0 0 5px #000;
+}
+#bat{
+  position:absolute;
+  bottom:42px;
+  left:88px;
+  width:120px;
+  height:18px;
+  background:linear-gradient(90deg,#d9a441,#f7d68a);
+  border-radius:999px;
+  display:none;
+  transform-origin:20% 80%;
+  z-index:10;
+  pointer-events:none;
+}
+#bat.swing{animation:swing .16s linear}
+@keyframes swing{
+  0%{transform:rotate(-45deg)}
+  100%{transform:rotate(45deg)}
+}
+#msg{
+  position:absolute;
+  top:25%;
+  width:100%;
+  text-align:center;
+  font-size:24px;
+  font-weight:bold;
+  color:#ffff00;
+  text-shadow:2px 2px #000;
+  z-index:20;
+  pointer-events:none;
+  padding:0 10px;
+}
+.btn-container{margin:10px;height:50px}
+#action-btn{
+  padding:12px 30px;
+  font-size:18px;
+  font-weight:bold;
+  cursor:pointer;
+  background:var(--y-r);
+  color:#fff;
+  border:2px solid #fff;
+  border-radius:50px;
+}
+.small{font-size:12px;color:#ddd;margin-top:4px}
+</style>
 </head>
 <body>
 
-    <div id="sb">
-        <div class="flex">
-            <div>あなた <b id="sc-y" style="font-size:20px">0</b></div>
-            <div id="inning-text" style="font-size:12px; color:#0f0">待機中</div>
-            <div><b id="sc-h" style="font-size:20px">0</b> CPU</div>
-        </div>
-        <hr style="border:0; border-top:1px solid #444">
-        <div class="flex">
-            <div style="text-align:left">
-                B<span id="b1" class="dot"></span><span id="b2" class="dot"></span><span id="b3" class="dot"></span><br>
-                S<span id="s1" class="dot"></span><span id="s2" class="dot"></span><br>
-                O<span id="o1" class="dot"></span><span id="o2" class="dot"></span>
-            </div>
-            <div class="flex" style="flex-direction: column;">
-                <div id="r2" class="runner"></div>
-                <div class="flex">
-                    <div id="r3" class="runner"></div>
-                    <div id="r1" class="runner"></div>
-                </div>
-            </div>
-        </div>
+<div id="sb">
+  <div class="flex">
+    <div>あなた <b id="sc-y" style="font-size:20px">0</b></div>
+    <div id="inning-text" style="font-size:12px;color:#0f0">待機中</div>
+    <div><b id="sc-h" style="font-size:20px">0</b> CPU</div>
+  </div>
+  <hr style="border:0;border-top:1px solid #444">
+  <div class="flex">
+    <div style="text-align:left">
+      B<span id="b1" class="dot"></span><span id="b2" class="dot"></span><span id="b3" class="dot"></span><br>
+      S<span id="s1" class="dot"></span><span id="s2" class="dot"></span><br>
+      O<span id="o1" class="dot"></span><span id="o2" class="dot"></span>
     </div>
-
-    <div id="stadium" onmousedown="handleInput()">
-        <div id="msg">「試合開始」を押してね</div>
-        <div id="infield"></div>
-        <div id="ball"></div>
-        <div id="bat"></div>
+    <div class="flex" style="flex-direction:column;">
+      <div id="r2" class="runner"></div>
+      <div class="flex">
+        <div id="r3" class="runner"></div>
+        <div id="r1" class="runner"></div>
+      </div>
     </div>
+  </div>
+</div>
 
-    <div class="btn-container">
-        <button id="action-btn" onclick="gameControl()">試合開始！</button>
-    </div>
+<div id="stadium">
+  <div id="msg">「試合開始」を押してね</div>
+  <div id="infield"></div>
+  <div id="ball"></div>
+  <div id="bat"></div>
+</div>
 
-    <script>
-        let scoreP = 0, scoreC = 0, b=0, s=0, o=0;
-        let runners = [false, false, false];
-        let bX, bY, vx, vy, isF=false, isP=false, isUserTurn=true, gameInProgress=false;
-        let swingStartTime = 0;
-        let timer;
+<div class="btn-container">
+  <button id="action-btn">試合開始！</button>
+  <div class="small">あなたの攻撃：球が来たら画面タップ / クリックでスイング</div>
+</div>
 
-        function updateSB() {
-            document.getElementById('sc-y').
+<script>
+let scoreP = 0, scoreC = 0;
+let b = 0, s = 0, o = 0;
+let runners = [false, false, false]; // 1塁,2塁,3塁
+let bX = 155, bY = 35, vx = 0, vy = 6;
+let isPitching = false;
+let isUserTurn = true;
+let gameStarted = false;
+let timer = null;
+let cpuSwung = false;
+
+const ball = document.getElementById('ball');
+const bat = document.getElementById('bat');
+const msg = document.getElementById('msg');
+const actionBtn = document.getElementById('action-btn');
+const stadium = document.getElementById('stadium');
+
+actionBtn.addEventListener('click', gameControl);
+stadium.addEventListener('mousedown', handleInput);
+stadium.addEventListener('touchstart', (e)=>{ e.preventDefault(); handleInput(); }, {passive:false});
+
+function updateSB(){
+  document.getElementById('sc-y').textContent = scoreP;
+  document.getElementById('sc-h').textContent = scoreC;
+  document.getElementById('inning-text').textContent =
+    gameStarted ? (isUserTurn ? '1回表 あなたの攻撃' : '1回裏 CPUの攻撃') : '待機中';
+
+  for(let i=1;i<=3;i++){
+    document.getElementById('b'+i).className = 'dot' + (b >= i ? ' b-on' : '');
+  }
+  for(let i=1;i<=2;i++){
+    document.getElementById('s'+i).className = 'dot' + (s >= i ? ' s-on' : '');
+  }
+  for(let i=1;i<=2;i++){
+    document.getElementById('o'+i).className = 'dot' + (o >= i ? ' o-on' : '');
+  }
+  for(let i=1;i<=3;i++){
+    document.getElementById('r'+i).className = 'runner' + (runners[i-1] ? ' r-on' : '');
+  }
+}
+
+function gameControl(){
+  if(!gameStarted){
+    scoreP = 0; scoreC = 0;
+    isUserTurn = true;
+    gameStarted = true;
+    resetCount();
+    actionBtn.textContent = '投げる！';
+    msg.textContent = 'あなたの攻撃！';
+    updateSB();
+    return;
+  }
+  if(!isPitching){
+    startPitch();
+  }
+}
+
+function resetCount(){
+  b = 0; s = 0; o = 0;
+  runners = [false,false,false];
+  updateSB();
+}
+
+function startPitch(){
+  if(isPitching) return;
+  isPitching = true;
+  cpuSwung = false;
+
+  bX = 155;
+  bY = 25;
+  vx = (Math.random() - 0.5) * 1.2;
+  vy = 5 + Math.random() * 2;
+
+  ball.style.left = bX + 'px';
+  ball.style.top = bY + 'px';
+  ball.style.display = 'block';
+  msg.textContent = isUserTurn ? 'タイミングよく打て！' : 'CPU打撃中...';
+  actionBtn.textContent = '投球中';
+
+  clearInterval(timer);
+  timer = setInterval(()=>{
+    bX += vx;
+    bY += vy;
+    ball.style.left = bX + 'px';
+    ball.style.top = bY + 'px';
+
+    if(!isUserTurn && !cpuSwung && bY > 300 + Math.random()*30){
+      cpuSwung = true;
+      swing(true);
+    }
+
+    if(bY > 390){
+      clearInterval(timer);
+      ball.style.display = 'none';
+      isPitching = false;
+      addStrike();
+      nextReady();
+    }
+  }, 20);
+}
+
+function handleInput(){
+  if(!gameStarted || !isUserTurn || !isPitching) return;
+  swing(false);
+}
+
+function swing(isCPU){
+  if(!isPitching) return;
+
+  bat.style.display = 'block';
+  bat.classList.remove('swing');
+  void bat.offsetWidth;
+  bat.classList.add('swing');
+
+  const goodY = 322;
+  const diff = Math.abs(bY - goodY);
+  let result;
+
+  clearInterval(timer);
+  ball.style.display = 'none';
+  isPitching = false;
+
+  if(diff < 16){
+    result = 'HR';
+  }else if(diff < 38){
+    result = 'HIT';
+  }else{
+    result = 'OUT';
+  }
+
+  setTimeout(()=>{ bat.style.display = 'none'; }, 180);
+  applyResult(result, isCPU);
+  nextReady();
+}
+
+function applyResult(result, isCPU){
+  if(result === 'HR'){
+    const runs = 1 + runners.filter(Boolean).length;
+    addScore(isCPU, runs);
+    runners = [false,false,false];
+    msg.textContent = 'ホームラン！ +' + runs + '点';
+  }else if(result === 'HIT'){
+    advanceRunners(isCPU);
+    msg.textContent = 'ヒット！';
+  }else{
+    addOut();
+    msg.textContent = 'アウト！';
+  }
+  updateSB();
+}
+
+function advanceRunners(isCPU){
+  if(runners[2]) addScore(isCPU, 1);
+  runners[2] = runners[1];
+  runners[1] = runners[0];
+  runners[0] = true;
+}
+
+function addScore(isCPU, n){
+  if(isCPU) scoreC += n;
+  else scoreP += n;
+}
+
+function addStrike(){
+  s++;
+  if(s >= 3){
+    s = 0;
+    addOut();
+    msg.textContent = '三振！';
+  }else{
+    msg.textContent = 'ストライク！';
+  }
+  updateSB();
+}
+
+function addOut(){
+  o++;
+  s = 0;
+  b = 0;
+
+  if(o >= 3){
+    changeSide();
+  }
+}
+
+function changeSide(){
+  o = 0; s = 0; b = 0;
+  runners = [false,false,false];
+
+  if(isUserTurn){
+    isUserTurn = false;
+    msg.textContent = 'チェンジ！CPUの攻撃';
+    actionBtn.textContent = '投げる！';
+  }else{
+    gameStarted = false;
+    actionBtn.textContent = 'もう一度試合開始！';
+
+    if(scoreP > scoreC) msg.textContent = '試合終了！あなたの勝ち！';
+    else if(scoreP < scoreC) msg.textContent = '試合終了！CPUの勝ち！';
+    else msg.textContent = '試合終了！引き分け！';
+  }
+  updateSB();
+}
+
+function nextReady(){
+  if(!gameStarted) return;
+  if(o >= 3) return;
+  actionBtn.textContent = '投げる！';
+  updateSB();
+}
+
+updateSB();
+</script>
+</body>
+</html>
