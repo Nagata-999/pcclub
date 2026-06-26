@@ -2,154 +2,78 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>野球ゲーム - CPU参戦版</title>
+    <title>プロ野球ミニ - 1イニング対戦（修正版）</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { text-align: center; font-family: 'Hiragino Kaku Gothic ProN', sans-serif; background-color: #f0f0f0; }
-        #game-container {
-            position: relative;
-            width: 400px;
-            height: 500px;
-            background-color: #2e8b57;
-            margin: 20px auto;
-            border: 10px solid #5d4037;
-            border-radius: 10px;
-            overflow: hidden;
+        :root { --y-r: #EF3E42; --grass: #228B22; --soil: #8B4513; }
+        body { text-align: center; font-family: sans-serif; background: #1a1a1a; color: white; margin: 0; padding: 0; overflow: hidden; }
+        
+        #sb { background: #003300; width: 340px; margin: 10px auto 0; padding: 10px 5px; font-size: 14px; border: 2px solid #555; border-radius: 10px; }
+        .flex { display: flex; justify-content: space-around; align-items: center; }
+        .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 1px solid #777; margin: 0 2px; }
+        .b-on { background: #ffff00; } .s-on { background: #ffaa00; } .o-on { background: #ff0000; }
+        .runner { width: 12px; height: 12px; border: 1px solid #fff; transform: rotate(45deg); margin: 2px; }
+        .r-on { background: #ffff00; }
+
+        #stadium {
+            position: relative; width: 320px; height: 380px; background: var(--grass);
+            margin: 10px auto; border: 4px solid #ccc; border-radius: 20px; overflow: hidden; z-index: 1; cursor: pointer;
         }
-        #ball {
-            position: absolute;
-            top: 80px;
-            left: 190px;
-            width: 20px;
-            height: 20px;
-            background-color: white;
-            border-radius: 50%;
-            display: none;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+        #infield { position: absolute; bottom: -60px; left: 35px; width: 250px; height: 250px; background: var(--soil); border-radius: 50%; transform: rotate(45deg); border: 2px solid #fff; pointer-events: none; }
+        #ball { position: absolute; width: 11px; height: 11px; background: white; border-radius: 50%; display: none; z-index: 5; }
+        #bat { 
+            position: absolute; bottom: 40px; left: 80px; width: 120px; height: 120px;
+            background-image: url('images/bat.png'); background-size: contain; background-repeat: no-repeat;
+            display: none; transform-origin: 20% 80%; z-index: 10; pointer-events: none;
         }
-        #bat {
-            position: absolute;
-            bottom: 50px;
-            left: 150px;
-            width: 100px;
-            height: 12px;
-            background-color: #deb887;
-            display: none;
-            transform-origin: center;
-        }
-        #home-plate {
-            position: absolute;
-            bottom: 45px;
-            left: 180px;
-            width: 40px;
-            height: 20px;
-            background-color: #fff;
-            clip-path: polygon(0% 0%, 100% 0%, 100% 50%, 50% 100%, 0% 50%);
-        }
-        .controls { margin-top: 20px; }
-        button { padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 5px; border: none; background: #333; color: white; }
-        button:disabled { background: #ccc; }
-        #message { font-size: 28px; font-weight: bold; color: #d32f2f; height: 40px; margin-bottom: 10px; }
-        .status { margin-bottom: 10px; font-size: 18px; }
+        
+        #msg { position: absolute; top: 25%; width: 100%; text-align: center; font-size: 24px; font-weight: bold; color: #ffff00; text-shadow: 2px 2px #000; z-index: 20; pointer-events: none; }
+        .btn-container { margin: 10px; height: 50px; }
+        #action-btn { padding: 12px 30px; font-size: 18px; font-weight: bold; cursor: pointer; background: var(--y-r); color: #fff; border: 2px solid #fff; border-radius: 50px; }
     </style>
 </head>
 <body>
 
-    <h1>CPU vs CPU / Player</h1>
-    <div id="message">READY?</div>
-    <div class="status">Mode: <span id="mode-text">Manual</span></div>
-    
-    <div id="game-container">
+    <div id="sb">
+        <div class="flex">
+            <div>あなた <b id="sc-y" style="font-size:20px">0</b></div>
+            <div id="inning-text" style="font-size:12px; color:#0f0">待機中</div>
+            <div><b id="sc-h" style="font-size:20px">0</b> CPU</div>
+        </div>
+        <hr style="border:0; border-top:1px solid #444">
+        <div class="flex">
+            <div style="text-align:left">
+                B<span id="b1" class="dot"></span><span id="b2" class="dot"></span><span id="b3" class="dot"></span><br>
+                S<span id="s1" class="dot"></span><span id="s2" class="dot"></span><br>
+                O<span id="o1" class="dot"></span><span id="o2" class="dot"></span>
+            </div>
+            <div class="flex" style="flex-direction: column;">
+                <div id="r2" class="runner"></div>
+                <div class="flex">
+                    <div id="r3" class="runner"></div>
+                    <div id="r1" class="runner"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="stadium" onmousedown="handleInput()">
+        <div id="msg">「試合開始」を押してね</div>
+        <div id="infield"></div>
         <div id="ball"></div>
-        <div id="home-plate"></div>
         <div id="bat"></div>
     </div>
 
-    <div class="controls">
-        <button id="pitch-btn" onclick="pitchBall()">投げる (Pitch)</button>
-        <button id="swing-btn" onclick="swingBat()" disabled>打つ (Swing)</button>
-        <button id="cpu-btn" onclick="toggleCPU()">CPU自動打撃: OFF</button>
+    <div class="btn-container">
+        <button id="action-btn" onclick="gameControl()">試合開始！</button>
     </div>
 
     <script>
-        const ball = document.getElementById('ball');
-        const bat = document.getElementById('bat');
-        const message = document.getElementById('message');
-        const pitchBtn = document.getElementById('pitch-btn');
-        const swingBtn = document.getElementById('swing-btn');
-        const cpuBtn = document.getElementById('cpu-btn');
-        const modeText = document.getElementById('mode-text');
+        let scoreP = 0, scoreC = 0, b=0, s=0, o=0;
+        let runners = [false, false, false];
+        let bX, bY, vx, vy, isF=false, isP=false, isUserTurn=true, gameInProgress=false;
+        let swingStartTime = 0;
+        let timer;
 
-        let ballPos = 80;
-        let pitchInterval;
-        let isPitched = false;
-        let cpuEnabled = false;
-        let cpuTargetPos = 440; // CPUが狙う高さ
-
-        // CPUモードの切り替え
-        function toggleCPU() {
-            cpuEnabled = !cpuEnabled;
-            cpuBtn.innerText = "CPU自動打撃: " + (cpuEnabled ? "ON" : "OFF");
-            modeText.innerText = cpuEnabled ? "Auto (CPU)" : "Manual";
-            cpuBtn.style.background = cpuEnabled ? "#4CAF50" : "#333";
-        }
-
-        function pitchBall() {
-            if (isPitched) return;
-            
-            isPitched = true;
-            ballPos = 80;
-            ball.style.top = ballPos + 'px';
-            ball.style.display = 'block';
-            message.innerText = "PLAY BALL!";
-            pitchBtn.disabled = true;
-            swingBtn.disabled = cpuEnabled; // CPU時はボタン無効
-
-            // 投球スピード（ランダム性を持たせるとよりゲームらしくなります）
-            const speed = 5 + Math.random() * 3;
-
-            pitchInterval = setInterval(() => {
-                ballPos += speed;
-                ball.style.top = ballPos + 'px';
-
-                // CPUのロジック: ターゲット位置に来たら自動で振る
-                if (cpuEnabled && ballPos >= cpuTargetPos - 5 && ballPos <= cpuTargetPos + 5) {
-                    swingBat();
-                }
-
-                if (ballPos > 500) {
-                    endGame("STRIKE!");
-                }
-            }, 20);
-        }
-
-        function swingBat() {
-            if (!isPitched) return;
-
-            bat.style.display = 'block';
-            // 振った瞬間の判定
-            const hitZone = 440;
-            const diff = Math.abs(ballPos - hitZone);
-
-            setTimeout(() => {
-                bat.style.display = 'none';
-                if (diff < 15) {
-                    endGame("⚾ HOME RUN!! ⚾");
-                } else if (diff < 40) {
-                    endGame("HIT!");
-                } else {
-                    // 振り遅れ・早すぎはスルー（ballPosが500を超えるまで続く）
-                }
-            }, 100);
-        }
-
-        function endGame(result) {
-            clearInterval(pitchInterval);
-            message.innerText = result;
-            ball.style.display = 'none';
-            isPitched = false;
-            pitchBtn.disabled = false;
-            swingBtn.disabled = true;
-        }
-    </script>
-</body>
-</html>
+        function updateSB() {
+            document.getElementById('sc-y').
